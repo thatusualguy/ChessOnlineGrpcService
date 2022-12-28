@@ -1,0 +1,218 @@
+syntax = "proto3";
+
+package ChessOnline;
+
+import "google/protobuf/duration.proto";  
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+
+// c# declaration
+option csharp_namespace = "ChessOnlineGrpcService";
+
+// java declaration
+option java_package = "io.github.thatusualguy.chessonline.grpc";
+
+
+service chess_account{
+	rpc register (register_request) returns (register_reply);
+	rpc login (login_reqiest) returns (login_reply);
+
+	rpc get_info (google.protobuf.Empty) returns (account_info);
+	rpc set_info (change_info_request) returns (change_info_reply);
+
+	rpc get_stats (google.protobuf.Empty) returns (stats_reply);
+
+	rpc get_history_length (google.protobuf.Empty) returns (history_length_reply);
+	rpc get_history (history_request) returns (history_reply);
+}
+
+service chess_game{
+	rpc create_game (game_settings) returns (create_game_result); 
+
+	rpc get_waiting_games (google.protobuf.Empty) returns (waiting_games_reply);
+	rpc enter_game (enter_game_request) returns (enter_game_reply);
+
+	rpc get_game_info (google.protobuf.Empty) returns (game_info_reply);
+
+	rpc play_game (game_request) returns (game_reply);
+}
+
+
+message id_{
+	string value = 1;
+}  
+
+message register_request{
+	string email = 1;
+	string password = 2;
+	string name = 3;
+}
+
+message register_reply{
+	oneof result{
+		bool success = 1;
+		string error_message = 2;
+	}
+}
+
+message login_reqiest{
+	string email = 1;
+	string password = 2;
+}
+
+message login_reply{
+	oneof result {
+		string error_message = 1;
+		string jwt = 2;
+	}
+}
+
+
+message change_info_request{
+	account_info new_info = 1;
+	string password = 2;
+}
+
+message change_info_reply{
+	oneof result{
+		bool success = 1;
+		string error_message = 2;
+	};
+	account_info current_info = 3;
+}
+
+message account_info{
+	string email = 1;
+	string password = 2;
+	string fullname = 3;
+}
+
+message stats_reply{
+	stat elo = 1;
+	stat games = 2;
+	stat wins = 3;
+	stat loses = 4;
+	stat draws = 5;
+	stat max_elo = 6;
+}
+
+message stat{
+	int32 value = 1;
+	string add_info = 2;
+}
+
+message history_length_reply{
+	int32 count = 1;
+}
+
+message history_request{
+	int32 offset = 1;
+	int32 length = 2;
+}
+
+message history_reply{
+	repeated saved_game games = 1; 
+}
+
+message saved_game{
+	id_ id = 1;
+	account player_1 = 2;
+	account player_2 = 3;
+	int32 old_opponent_elo = 4;
+	int32 elo_change = 5;
+	string winner_id = 6;
+	google.protobuf.Timestamp creation_time = 7;
+}
+
+message game_settings{
+	range elo = 1;
+	google.protobuf.Duration turn_duration = 2;
+	color starting_color = 3;
+}
+
+message create_game_result{
+	oneof result {
+		bool success = 1;
+		string error_message = 2;
+	}
+}
+
+message action_result{
+	oneof result {
+		bool success = 1;
+		string error_message = 2;
+	}
+}
+
+message waiting_games_reply{
+	repeated waiting_game games = 1;
+}
+
+message waiting_game{
+	id_ id = 1;
+	google.protobuf.Timestamp creation_time = 2;
+	account creator = 3;
+	int32 elo = 4;
+	color chosed_color = 5;
+}
+
+message range{
+	int32 min = 1;
+	int32 max = 2;
+}
+
+message account{
+	string name = 1;
+	id_ id = 2;
+}
+
+enum color{
+	color_unknown = 0;
+	color_white = 1;
+	color_black = 2;
+}
+
+message enter_game_request{
+	id_ game_id = 1;
+}
+
+message enter_game_reply{
+	action_result result = 1;
+}
+
+message game_info_reply{
+	id_ game_id = 1;
+	account opponent = 2;
+	google.protobuf.Duration turn_duration = 3;
+	color your_color = 4;
+}
+
+message game_request{
+	oneof value{
+		game_turn turn = 1;
+		additional_request request = 2;
+	}
+}
+
+message game_reply{
+	int32 turn_num = 1;
+	oneof value {
+		game_end end = 2;
+		game_turn turn = 3;
+	}
+}
+
+message game_turn{
+	color active = 2;
+	string turn = 3;
+}
+
+message game_end{
+	color winner = 1;
+	int32 elo_change = 2;
+}
+
+message additional_request{
+	
+}
