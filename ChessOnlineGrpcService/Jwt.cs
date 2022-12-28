@@ -56,18 +56,23 @@ namespace ChessOnlineGrpcService
 			return true;
 		}
 
-		public static string GetClaim(string token, string claimType)
+		public static string? GetClaim(string token, string claimType)
 		{
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var securityToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
 
-			var stringClaimValue = securityToken.Claims.First(claim => claim.Type == claimType).Value;
+			var stringClaimValue = securityToken?.Claims.First(claim => claim.Type == claimType).Value;
 			return stringClaimValue;
 		}
 
-		public static int GetNameIdentifierClaim(string token)
+		public static int? GetNameIdentifierClaim(string token)
 		{
-			return int.Parse(GetClaim(token, "nameid"));
+			var claim = GetClaim(token, "nameid");
+			
+			if (int.TryParse(claim, out var NameId))
+				return NameId;
+			else
+				return null;
 		}
 	}
 }

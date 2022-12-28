@@ -85,11 +85,10 @@ namespace ChessOnlineGrpcService.Services
 
 			Models.User? user = db?.Users?.Where(u => u.Email == request.Email)?.First();
 
-			bool found = user is not null;
-			if (!found)
+			if (user is not null)
 				return Task.FromResult(new login_reply() { ErrorMessage = "No user with such email." });
 
-			bool success = hashPassword(user.Password) == hashPassword(request.Password);
+			bool success = hashPassword(user!.Password) == hashPassword(request.Password);
 
 
 			if (!success)
