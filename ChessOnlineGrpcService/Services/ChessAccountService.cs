@@ -38,7 +38,13 @@ namespace ChessOnlineGrpcService.Services
 			var request = context.GetHttpContext().Request;
 			//var token = request.Cookies["Token"];
 			string val = request.Headers.First(x => x.Key == "Authorization").Value.ToString().Split()[1];
-			return JWT.GetNameIdentifierClaim(val);
+
+
+			var id = JWT.GetNameIdentifierClaim(val);
+			if (id.HasValue)
+				return id.Value;
+			else
+				return -1;
 		}
 
 		public override Task<history_length_reply> get_history_length(Empty request, ServerCallContext context)
@@ -66,6 +72,8 @@ namespace ChessOnlineGrpcService.Services
 		public override Task<stats_reply> get_stats(Empty request, ServerCallContext context)
 		{
 			int id = TryValidateUser(context);
+			if (id == -1)
+				return base.get_stats(request, context);
 
 			using var db = new Models.chess_onlineContext();
 			var user = db.Users.First(x => x.Id == id);
@@ -144,8 +152,6 @@ namespace ChessOnlineGrpcService.Services
 
 		string hashPassword(string password)
 		{
-			if (password is null)
-				return null;
 			return password;
 		}
 	}
