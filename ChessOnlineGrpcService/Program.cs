@@ -8,6 +8,9 @@ builder.Services.AddGrpcReflection();
 
 var app = builder.Build();
 
+
+//app.Urls.Add("https://*:7106"); 
+app.Urls.Add("http://*:7105"); 
 // Configure the HTTP request pipeline.
 app.UseRouting();
 //app.UseAuthentication();
@@ -22,3 +25,4 @@ if (env.IsDevelopment())
 	app.MapGrpcReflectionService();
 
 app.Run();
+
