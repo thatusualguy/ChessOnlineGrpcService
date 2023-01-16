@@ -50,6 +50,8 @@ namespace ChessOnlineGrpcService.Services
 				});
 			}
 
+			
+
 			return Task.FromResult(reply);
 		}
 

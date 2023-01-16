@@ -2,13 +2,13 @@
 
 namespace ChessOnlineGrpcService.Models
 {
-    public partial class chess_onlineContext : DbContext
+    public partial class ChessOnlineContext : DbContext
     {
-        public chess_onlineContext()
+        public ChessOnlineContext()
         {
         }
 
-        public chess_onlineContext(DbContextOptions<chess_onlineContext> options)
+        public ChessOnlineContext(DbContextOptions<ChessOnlineContext> options)
             : base(options)
         {
         }
@@ -20,15 +20,18 @@ namespace ChessOnlineGrpcService.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql("name=ChessOnline", ServerVersion.Parse("8.0.28-mysql"));
+				var mem = new ConfigurationBuilder()
+						.SetBasePath(Directory.GetCurrentDirectory())
+						.AddJsonFile("appSettings.json", optional: true, reloadOnChange: true);
+				IConfiguration _configuration = mem.Build();
+				var connection = _configuration.GetConnectionString("Postgres");
+			
+				optionsBuilder.UseNpgsql(connection);
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.UseCollation("utf8mb4_0900_ai_ci")
-                .HasCharSet("utf8mb4");
-
             modelBuilder.Entity<PlayedGame>(entity =>
             {
                 entity.ToTable("played_games");
@@ -37,11 +40,11 @@ namespace ChessOnlineGrpcService.Models
 
                 entity.HasIndex(e => e.Player2, "player_id_2_idx");
 
-                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasDefaultValueSql("nextval('played_games_seq'::regclass)");
 
-                entity.Property(e => e.P1Color)
-                    .HasColumnType("enum('white','black')")
-                    .HasColumnName("p_1_color");
+                entity.Property(e => e.P1Color).HasColumnName("p_1_color");
 
                 entity.Property(e => e.Player1).HasColumnName("player_1");
 
@@ -68,14 +71,16 @@ namespace ChessOnlineGrpcService.Models
             {
                 entity.ToTable("users");
 
-                entity.HasIndex(e => e.Email, "email_UNIQUE")
+                entity.HasIndex(e => e.Email, "email_unique")
                     .IsUnique();
 
-                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasDefaultValueSql("nextval('users_seq'::regclass)");
 
                 entity.Property(e => e.Elo)
                     .HasColumnName("elo")
-                    .HasDefaultValueSql("'0'");
+                    .HasDefaultValueSql("0");
 
                 entity.Property(e => e.Email)
                     .HasMaxLength(45)
@@ -89,6 +94,10 @@ namespace ChessOnlineGrpcService.Models
                     .HasMaxLength(125)
                     .HasColumnName("password");
             });
+
+            modelBuilder.HasSequence("played_games_seq");
+
+            modelBuilder.HasSequence("users_seq");
 
             OnModelCreatingPartial(modelBuilder);
         }
